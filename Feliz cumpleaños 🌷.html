@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Feliz cumpleaños 🌷</title>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#030008;--ink:#fff;--pink:#ff2f92;--pink-light:#ffb3dc;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;background:var(--bg);overflow:hidden;color:var(--ink);font-family:'Dancing Script',cursive,Georgia,serif}
+canvas{position:fixed;inset:0;display:block;touch-action:none}
+.o{position:fixed;left:0;right:0;text-align:center;padding:0 24px;box-sizing:border-box;pointer-events:none;opacity:0;transition:opacity 1.6s;text-shadow:0 2px 18px rgba(80,0,60,.7)}
+#cap{bottom:18%;font-size:clamp(1.4rem,5vw,2.2rem)}
+#title{top:6%;font-size:clamp(2.6rem,10vw,5.2rem);line-height:1.05;background:linear-gradient(90deg,#ffd1e3,#ff6fa3,#ffd1e3);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 0 18px rgba(255,90,150,.6))}
+#title small{display:block;font-size:.45em;color:#ffe3ee;-webkit-text-fill-color:#ffe3ee;margin-top:6px}
+#msg{bottom:11%;font-size:clamp(1.3rem,4.6vw,2.1rem);transition:opacity 1.2s}
+#flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .9s}
+
+/* Overlay para activar audio inmediato */
+#startOverlay{
+  position:fixed;inset:0;background:rgba(3,0,8,0.92);z-index:6000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;text-align:center;padding:20px;
+}
+#startOverlay h2{font-size:clamp(1.8rem,6vw,2.8rem);color:#fde047;margin:0 0 10px;text-shadow:0 0 15px rgba(253,224,71,0.6)}
+#startOverlay p{font-size:1.3rem;color:#ffe3ee;margin:0}
+
+/* Pantalla de inicio */
+#start{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:radial-gradient(circle at center, #240a36, #030008);z-index:5000;overflow:hidden;text-align:center;padding:24px}
+
+/* Cuadro iluminado amplio en la parte superior */
+.cuadro-poema{
+  background: rgba(255, 47, 146, 0.12);
+  border: 1.5px solid rgba(255, 179, 220, 0.5);
+  box-shadow: 0 0 25px rgba(255, 47, 146, 0.4), inset 0 0 15px rgba(255, 179, 220, 0.2);
+  border-radius: 24px;
+  padding: 20px 28px;
+  width: 90%;
+  max-width: 850px;
+  max-height: 50vh;
+  overflow-y: auto;
+  backdrop-filter: blur(8px);
+  animation: brillar 3s ease-in-out infinite alternate;
+  z-index: 10;
+  box-sizing: border-box;
+}
+@keyframes brillar{
+  0%{ box-shadow: 0 0 18px rgba(255, 47, 146, 0.3); }
+  100%{ box-shadow: 0 0 32px rgba(255, 47, 146, 0.6), 0 0 10px rgba(255, 255, 255, 0.4); }
+}
+
+.cuadro-poema p{
+  margin: 0;
+  font-size: clamp(0.95rem, 3vw, 1.25rem);
+  color: #ffe3ee;
+  line-height: 1.55;
+  font-style: italic;
+  text-shadow: 0 0 10px rgba(255,179,220,0.5);
+  white-space: pre-line;
+}
+
+#start h1{font-size:clamp(1.8rem,6vw,3.1rem);margin:0;font-weight:600;color:#fde047;text-shadow:0 0 15px rgba(253,224,71,0.5)}
+#start button{font:inherit;font-size:1.4rem;padding:12px 36px;border-radius:40px;border:0;background:linear-gradient(90deg,#ff2f92,#ff7cbd);color:#fff;cursor:pointer;box-shadow:0 0 30px rgba(255,47,146,.6);transition:transform .2s;z-index:10}
+#start button:hover{transform:scale(1.06)}
+
+/* Ramos laterales */
+.side{position:absolute;bottom:12%;height:min(38vh,280px);max-width:25vw;object-fit:contain;pointer-events:none;transform-origin:center center;animation:sw 5s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(255,47,146,0.4))}
+.side.l{left:2vw;animation-delay:0s}
+.side.r{right:2vw;animation-delay:-2.5s}
+@keyframes sw{0%,100%{transform:rotate(-3deg) scale(0.98)}50%{transform:rotate(3deg) scale(1.02)}}
+.fb{position:absolute;bottom:15vh;font-size:min(15vw,100px)}.fb.l{left:3vw}.fb.r{right:3vw}
+.f{position:fixed;left:0;top:0;height:240px;width:auto;max-width:none;pointer-events:none;display:none;will-change:transform,opacity;transform-origin:0 0;z-index:1}
+.o{z-index:3000}#flash{z-index:4000}
+
+/* Contenedor de Textos Flotantes */
+#universoUI{
+  position:fixed;inset:0;pointer-events:none;z-index:3500;display:none;
+}
+.texto-flotante{
+  position:absolute;
+  color: var(--pink-light);
+  text-shadow: 0 0 8px var(--pink), 0 0 18px var(--pink), 0 0 30px #ff2f9280;
+  letter-spacing:1.5px;
+  pointer-events:auto;
+  cursor:pointer;
+  opacity:0;
+  animation: aparecer 2.5s ease forwards, flotar 5s ease-in-out infinite;
+  font-weight:600;
+  white-space:nowrap;
+  padding:6px 14px;
+  background:rgba(255,47,146,0.12);
+  border:1px solid rgba(255,179,220,0.35);
+  border-radius:20px;
+  backdrop-filter:blur(4px);
+  user-select:none;
+  transition:transform 0.25s, background 0.25s;
+}
+.texto-flotante:hover{
+  transform:scale(1.15) !important;
+  background:rgba(255,47,146,0.35);
+  color:#fff;
+  box-shadow:0 0 20px rgba(255,47,146,0.8);
+}
+@keyframes aparecer{ to{ opacity:1; } }
+@keyframes flotar{ 0%,100%{ transform:translateY(0px); } 50%{ transform:translateY(-10px); } }
+
+/* Modal con Mensajes */
+#wishModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(3,0,8,0.88);
+  backdrop-filter:blur(8px);
+  z-index:6000;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+}
+.modal-content{
+  background:linear-gradient(135deg, rgba(36,10,54,0.95), rgba(15,3,25,0.95));
+  border:1.5px solid rgba(255,179,220,0.5);
+  padding:32px;
+  border-radius:24px;
+  max-width:460px;
+  text-align:center;
+  box-shadow:0 0 40px rgba(255,47,146,0.5);
+  position:relative;
+  animation:pop 0.35s ease-out;
+}
+@keyframes pop{0%{transform:scale(0.8);opacity:0}100%{transform:scale(1);opacity:1}}
+.modal-content h3{
+  color:#fde047;
+  font-size:2rem;
+  margin:0 0 16px;
+  text-shadow:0 0 12px rgba(253,224,71,0.5);
+}
+.modal-content p{
+  font-size:1.25rem;
+  line-height:1.6;
+  color:#ffe3ee;
+  margin-bottom:10px;
+}
+.modal-close{
+  position:absolute;
+  top:12px;
+  right:18px;
+  font-size:26px;
+  color:#ff7cbd;
+  cursor:pointer;
+}
+</style></head><body>
+
+<!-- Audio de fondo -->
+<audio id="bgMusic" loop src="./img/audio.mpeg"></audio>
+
+<!-- Pantalla de Activación Inicial (Permite audio automático al tocar la pantalla) -->
+<div id="startOverlay">
+  <h2>✨ Un regalo especial te espera ✨</h2>
+  <p>Toca en cualquier parte para ingresar🎵</p>
+</div>
+
+<!-- Pantalla de Inicio -->
+<div id="start">
+  <img class="side l" src="./img/portal.png" onerror="this.outerHTML='<span class=\'fb l\'>🌷</span>'">
+  <img class="side r" src="./img/portal1.png" onerror="this.outerHTML='<span class=\'fb r\'>🌷</span>'">
+  
+  <!-- Cuadro Iluminado Arriba -->
+  <div class="cuadro-poema">
+    <p>
+"Hay miradas que se quedan guardadas en el alma para siempre, y la mía siempre te verá con el mismo amor❤️, la misma ternura y la misma gratitud de siempre✨.
+
+En su momento te amé con la fuerza más pura y transparente que conocí💞; fuiste ese lugar bonito donde mis ojos solo sabían admirarte. Es verdad que mi mayor temor siempre fue hacerte daño o perderte🥲, pero hoy entiendo que lo que es sincero no se pierde, solo se transforma en un cariño bonito que trasciende el tiempo y los momentos🌻.
+
+Sin importar qué giros dé la vida o qué caminos decidamos recorrer, en mí jamás habrá reproches, solo un deseo inmenso de verte florecer, brillar y conquistar cada uno de tus sueños🫂❤️.
+
+Que este nuevo año de vida te traiga toda la paz✨, el éxito y la felicidad que te mereces. Sonríe grande, Yessi😊💞, que el mundo es más bonito contigo en él... y recuerda que, pase lo que pase, aquí siempre tendrás a alguien que te cuida desde el corazón y con quien siempre podrás contar🫂."
+    </p>
+  </div>
+
+  <h1>🌷 FELIZ CUMPLE YESSI🫂🥳 🌷</h1>
+  <button id="go">Abrir regalo de Yessi ✨</button>
+
+  <!-- Texto corto debajo del botón -->
+  <p class="poema" style="margin-top: 10px; font-size: clamp(1.1rem,3.8vw,1.5rem);">
+    "Hoy florecieron mil tulipanes bajo el firmamento… <br>
+    y cada uno de sus pétalos guarda un deseo eterno lleno <br>
+    de luz y felicidad sólo para ti, Yessi 🌷✨"
+  </p>
+</div>
+
+<div id="cap" class="o"></div>
+<div id="title" class="o">¡Feliz Cumpleaños, Yessi❤️🫂!<small id="nm"></small></div>
+<div id="msg" class="o"></div>
+<div id="flash"></div>
+
+<!-- Textos Flotantes Interactivos -->
+<div id="universoUI">
+  <div class="texto-flotante" style="top:10%; left:5%; font-size:15px;" data-id="0">HAPPY BIRTHDAY</div>
+  <div class="texto-flotante" style="top:28%; left:3%; font-size:14px;" data-id="1">FELIZ CUMPLEAÑOS</div>
+  <div class="texto-flotante" style="top:56%; left:22%; font-size:20px;" data-id="2">MI PERSONA FAVORITA</div>
+  <div class="texto-flotante" style="top:36%; left:72%; font-size:14px;" data-id="3">MI REFUGIO</div>
+  <div class="texto-flotante" style="top:50%; left:68%; font-size:14px;" data-id="4">AMOR INFINITO</div>
+  <div class="texto-flotante" style="top:66%; left:65%; font-size:15px;" data-id="5">ERES INCREÍBLE</div>
+  <div class="texto-flotante" style="top:82%; left:36%; font-size:21px; letter-spacing:2px;" data-id="6">CUMPLE FELIZ</div>
+  <div class="texto-flotante" style="top:88%; left:12%; font-size:13px;" data-id="7">BRILLA SIEMPRE</div>
+</div>
+
+<!-- Modal para abrir frases -->
+<div id="wishModal">
+  <div class="modal-content">
+    <span class="modal-close" id="closeWish">✕</span>
+    <h3 id="wishTitle">✨ De mí para ti, Yessi ✨</h3>
+    <p id="wishText"></p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Reproducción de música inmediata al primer toque
+const music = document.getElementById('bgMusic');
+document.getElementById('startOverlay').onclick = () => {
+  document.getElementById('startOverlay').style.display = 'none';
+  if(music) music.play().catch(()=>{});
+};
+
+// ====== CONFIGURACIÓN GENERAL ======
+const C={
+  NAME:"Yessi",
+  T1:18,
+  FIELD:[
+   {u:"./img/img1.png", h:2.0}, {u:"./img/img2.png", h:1.9}, {u:"./img/img3.png", h:2.1},
+   {u:"./img/img4.png", h:2.3}, {u:"./img/img5.png", h:2.4}, {u:"./img/img6.png", h:2.0},
+   {u:"./img/img7.png", h:2.2}, {u:"./img/img8.png", h:1.9}, {u:"./img/img9.png", h:2.1},
+   {u:"./img/img10.png", h:2.0}, {u:"./img/img11.png", h:2.0}, {u:"./img/img12.png", h:1.9},
+   {u:"./img/img13.png", h:2.1}, {u:"./img/img14.png", h:2.3}, {u:"./img/img15.png", h:2.4},
+   {u:"./img/img16.png", h:2.0}, {u:"./img/img17.png", h:2.2}, {u:"./img/img18.png", h:1.9},
+   {u:"./img/img19.png", h:2.1}, {u:"./img/img20.png", h:2.0}
+  ],
+  INTRO:[[1,"Hay caminos que se sienten a primavera…"],[6,"Y este está hecho de tulipanes para ti, Yessi 🌷"],[11,"Sigue conmigo, ya casi llegamos…"],[15,"Cierra los ojos y pide un deseo ✨"]],
+  
+  WISHES:[
+    {title: "🎂 ¡Que todos tus sueños se cumplan! ✨", text: "¡Feliz Cumpleaños, Yessi! Que este día sea tan único y especial como lo eres tú. Te deseo un año lleno de abundancia, salud, éxitos profesionales y muchos momentos felices rodeada de la gente que te quiere. ¡A celebrar en grande tu vida!"},
+    {title:"🌷 Florece sin límites", text:"Que cada paso que des te acerque a tus metas más grandes. Tienes el talento, la determinación y la belleza de alma para conquistar todo lo que sueñes."},
+    {title:"🌟 Eres una gran persona", text:"Gracias por ser una persona maravillosa que llena de alegría y color la vida de quienes te rodean. Nunca dejes de sonreír con esa luz tan única."},
+    {title:"✨ Éxito en cada proyecto", text:"Que las puertas del éxito y la prosperidad se abran de par en par para ti. Te mereces cosechar los frutos de cada uno de tus esfuerzos."},
+    {title:"💖 Paz y felicidad infinita", text:"Que en tus días nunca falte la tranquilidad en el corazón, la compañía de quienes te aprecian y la certeza de que naciste para brillar grandemente."},
+    {title:"🚀 Un futuro brillante", text:"Que el universo sostenga todos tus anhelos y te devuelva multiplicado todo el cariño que tú le regalas al mundo."},
+    {title:"🎂 ¡Feliz Cumpleaños, Yessi!", text:"Hoy celebramos tu vida, tu historia y tu ser. Que pases un día inolvidable rodeada de afecto y buenos deseos. ¡Felicidades hoy y siempre!"},
+    {title:"🌸 Brilla con luz propia", text:"Sigue caminando con esa gracia y firmeza que te caracterizan. El mundo es un lugar infinitamente mejor porque estás en él, Yessi."}
+  ]
+};
+
+const $=id=>document.getElementById(id),R=Math.random,cl=(x,a,b)=>Math.min(b,Math.max(a,x));
+const ease=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const renderer=new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+document.body.appendChild(renderer.domElement);
+const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.1,400);
+
+function crearTextura(centro, medio, borde){
+  const c = document.createElement("canvas");
+  c.width = 64; c.height = 64;
+  const ctx = c.getContext("2d");
+  const g = ctx.createRadialGradient(32,32,0,32,32,32);
+  g.addColorStop(0, centro);
+  g.addColorStop(0.35, medio);
+  g.addColorStop(1, borde);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,64,64);
+  return new THREE.CanvasTexture(c);
+}
+const DOT = crearTextura("rgba(255,255,255,1)","rgba(255,110,170,0.9)","rgba(255,0,120,0)");
+const DOT_GOLD = crearTextura("rgba(255,255,255,1)","rgba(253,224,71,0.9)","rgba(250,204,21,0)");
+const DOT_WHITE = crearTextura("rgba(255,255,255,1)","rgba(220,200,255,0.85)","rgba(150,120,255,0)");
+
+/* ---------- ESCENA A: Túnel 3D ---------- */
+const A=new THREE.Scene();A.background=new THREE.Color(0x0a0418);A.fog=new THREE.FogExp2(0x0a0418,0.007);
+A.add(new THREE.HemisphereLight(0xd8b4fe,0x0f0a1c,1.5));
+const sun=new THREE.DirectionalLight(0xfff1f2,1.2);sun.position.set(5,10,5);A.add(sun);
+
+const groundGeo = new THREE.PlaneGeometry(280, 300);
+const groundMat = new THREE.MeshLambertMaterial({color: 0x0d0718});
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.set(0, -0.2, -120);
+A.add(ground);
+
+function createGoldPathTexture(){
+    const canvas = document.createElement('canvas');
+    canvas.width = 64; canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createLinearGradient(0, 0, 64, 0);
+    grad.addColorStop(0, 'rgba(253, 224, 71, 0)');
+    grad.addColorStop(0.3, 'rgba(253, 224, 71, 0.4)');
+    grad.addColorStop(0.5, 'rgba(254, 240, 138, 0.7)');
+    grad.addColorStop(0.7, 'rgba(253, 224, 71, 0.4)');
+    grad.addColorStop(1, 'rgba(253, 224, 71, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 64, 512);
+    return new THREE.CanvasTexture(canvas);
+}
+const pathGeo = new THREE.PlaneGeometry(3.6, 300);
+const pathMat = new THREE.MeshBasicMaterial({map: createGoldPathTexture(), transparent: true, blending: THREE.AdditiveBlending});
+const path = new THREE.Mesh(pathGeo, pathMat);
+path.rotation.x = -Math.PI / 2;
+path.position.set(0, -0.15, -120);
+A.add(path);
+
+const tunnelStarsCount = 3500;
+const tStarPositions = new Float32Array(tunnelStarsCount * 3);
+for(let i=0; i<tunnelStarsCount; i++){
+    tStarPositions[i*3] = (R() - 0.5) * 320;
+    tStarPositions[i*3+1] = R() * 120 + 2;
+    tStarPositions[i*3+2] = -R() * 260;
+}
+const tStarGeo = new THREE.BufferGeometry();
+tStarGeo.setAttribute('position', new THREE.BufferAttribute(tStarPositions, 3));
+const tStarMat = new THREE.PointsMaterial({size: 1.6, map: DOT_WHITE, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending});
+A.add(new THREE.Points(tStarGeo, tStarMat));
+
+function createMoonTexture(){
+    const canvas = document.createElement('canvas');
+    canvas.width = 128; canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fef08a';
+    ctx.shadowColor = '#fde047';
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.arc(64, 64, 45, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(80, 52, 40, 0, Math.PI * 2);
+    ctx.fill();
+    return new THREE.CanvasTexture(canvas);
+}
+const moonMat = new THREE.SpriteMaterial({map: createMoonTexture(), transparent: true, opacity: 0.95});
+const moon = new THREE.Sprite(moonMat);
+moon.scale.set(18, 18, 1);
+moon.position.set(35, 42, -180);
+A.add(moon);
+
+const N=1500,D=160,bx=[],bz=[],hh=[],sc=[],ph=[];
+const pal=[0xff4d7e,0xff85a8,0xffd23f,0xb04dff,0xffffff,0xff7a3d,0xe8123c].map(c=>new THREE.Color(c));
+const headG=new THREE.LatheGeometry([[0,0],[.12,.05],[.26,.25],[.3,.45],[.22,.65],[.08,.8],[0,.84]].map(p=>new THREE.Vector2(p[0],p[1])),12);
+const stemG=new THREE.CylinderGeometry(.02,.03,1,5);stemG.translate(0,.5,0);
+const heads=new THREE.InstancedMesh(headG,new THREE.MeshLambertMaterial({side:THREE.DoubleSide}),N);
+const stems=new THREE.InstancedMesh(stemG,new THREE.MeshLambertMaterial({color:0x3f8f3a}),N);
+[heads,stems].forEach(m=>{m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);m.frustumCulled=false;A.add(m)});
+for(let i=0;i<N;i++){bx.push((R()<.5?-1:1)*(1.6+Math.pow(R(),1.4)*20));bz.push(R()*D);hh.push(.6+R()*.9);sc.push(.7+R()*.7);ph.push(R()*6.28);heads.setColorAt(i,pal[Math.floor(R()*pal.length)])}
+const dm=new THREE.Object3D();
+function tulips(s,t){for(let i=0;i<N;i++){const z=((bz[i]+s)%D)-D,r=Math.sin(t*1.5+ph[i])*.08;
+dm.position.set(bx[i],0,z);dm.rotation.set(0,0,r);dm.scale.set(1,hh[i],1);dm.updateMatrix();stems.setMatrixAt(i,dm.matrix);
+dm.position.set(bx[i]-Math.sin(r)*hh[i],Math.cos(r)*hh[i],z);dm.rotation.set(0,ph[i],r);dm.scale.setScalar(sc[i]);dm.updateMatrix();heads.setMatrixAt(i,dm.matrix)}
+heads.instanceMatrix.needsUpdate=stems.instanceMatrix.needsUpdate=true}
+
+/* ---------- ESCENA B: Universo ---------- */
+const B=new THREE.Scene();B.fog=new THREE.FogExp2(0x030008, 0.028);
+
+const cantidadEstrellas = 2200;
+const posEstrellas = new Float32Array(cantidadEstrellas*3);
+for(let i=0;i<cantidadEstrellas;i++){
+  const idx=i*3;
+  posEstrellas[idx]   = (Math.random()-0.5)*70;
+  posEstrellas[idx+1] = Math.random()*35 - 3;
+  posEstrellas[idx+2] = (Math.random()-0.5)*70;
+}
+const geoEstrellas = new THREE.BufferGeometry();
+geoEstrellas.setAttribute("position", new THREE.BufferAttribute(posEstrellas,3));
+const matEstrellas = new THREE.PointsMaterial({
+  color:0xffffff, size:0.05, map:DOT_WHITE, transparent:true, opacity:0.8, depthWrite:false, blending:THREE.AdditiveBlending
+});
+B.add(new THREE.Points(geoEstrellas, matEstrellas));
+
+const grupoPortal = new THREE.Group();
+grupoPortal.position.y = -1.2;
+B.add(grupoPortal);
+
+const materialGlowPortal = new THREE.SpriteMaterial({
+  map: DOT, color:0xff2f92, transparent:true, opacity:0.35, depthWrite:false, blending:THREE.AdditiveBlending
+});
+const glowPortal = new THREE.Sprite(materialGlowPortal);
+glowPortal.scale.set(16, 6, 1);
+glowPortal.rotation.x = -Math.PI/2.3;
+grupoPortal.add(glowPortal);
+
+const nucleoGeo = new THREE.CircleGeometry(0.6, 32);
+const nucleoMat = new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.95 });
+const nucleo = new THREE.Mesh(nucleoGeo, nucleoMat);
+nucleo.rotation.x = -Math.PI/2;
+nucleo.position.y = 0.01;
+grupoPortal.add(nucleo);
+
+const cantidadEspiral = 3600;
+const anguloEspiral   = new Float32Array(cantidadEspiral);
+const radioEspiral    = new Float32Array(cantidadEspiral);
+const velEspiral      = new Float32Array(cantidadEspiral);
+const posEspiral = new Float32Array(cantidadEspiral*3);
+
+for(let i=0;i<cantidadEspiral;i++){
+  const brazo = i % 5;
+  const progreso = Math.random();
+  const radio = 0.7 + progreso*7.5;
+  anguloEspiral[i] = (brazo/5)*Math.PI*2 + progreso*6.0 + (Math.random()-0.5)*0.25;
+  radioEspiral[i]  = radio;
+  velEspiral[i]    = 0.5 + (1 - progreso)*0.9;
+}
+const geoEspiral = new THREE.BufferGeometry();
+geoEspiral.setAttribute("position", new THREE.BufferAttribute(posEspiral,3));
+const matEspiral = new THREE.PointsMaterial({
+  color:0xff3f9e, size:0.075, map:DOT, transparent:true, opacity:0.75, depthWrite:false, blending:THREE.AdditiveBlending
+});
+const espiral = new THREE.Points(geoEspiral, matEspiral);
+grupoPortal.add(espiral);
+
+const alturaCorazon = 2.9, alturaPortal = -1.2;
+const cantidadCorriente = 1800;
+const anguloCorriente = new Float32Array(cantidadCorriente);
+const progresoCorriente = new Float32Array(cantidadCorriente);
+const velCorriente = new Float32Array(cantidadCorriente);
+const radioInicialCorriente = new Float32Array(cantidadCorriente);
+const posCorriente = new Float32Array(cantidadCorriente*3);
+
+for(let i=0;i<cantidadCorriente;i++){
+  anguloCorriente[i] = Math.random()*Math.PI*2;
+  progresoCorriente[i] = Math.random();
+  velCorriente[i] = 0.15 + Math.random()*0.25;
+  radioInicialCorriente[i] = 0.3 + Math.random()*2.6;
+}
+const geoCorriente = new THREE.BufferGeometry();
+geoCorriente.setAttribute("position", new THREE.BufferAttribute(posCorriente,3));
+const matCorriente = new THREE.PointsMaterial({
+  color:0xff8ac8, size:0.06, map:DOT, transparent:true, opacity:0.85, depthWrite:false, blending:THREE.AdditiveBlending
+});
+const corriente = new THREE.Points(geoCorriente, matCorriente);
+B.add(corriente);
+
+const grupoCorazon = new THREE.Group();
+grupoCorazon.position.y = alturaCorazon;
+B.add(grupoCorazon);
+
+function crearHalo(color, opacidad, escala, z){
+  const mat = new THREE.SpriteMaterial({
+    map: DOT, color, transparent:true, opacity: opacidad, depthWrite:false, blending: THREE.AdditiveBlending
+  });
+  const halo = new THREE.Sprite(mat);
+  halo.scale.set(escala, escala, 1);
+  halo.position.z = z;
+  return halo;
+}
+const halo = crearHalo(0xff2f92, 0.25, 5.6, -1);
+const haloInterior = crearHalo(0xff8ac8, 0.22, 3.0, -0.6);
+grupoCorazon.add(halo);
+grupoCorazon.add(haloInterior);
+
+function puntoCorazon(t){
+  let x = 16*Math.pow(Math.sin(t),3);
+  let y = 13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t);
+  return {x: x*0.16, y: y*0.16};
+}
+
+const cantidadBorde = 2600;
+const posBorde = new Float32Array(cantidadBorde*3);
+for(let i=0;i<cantidadBorde;i++){
+  const idx = i*3;
+  const t = Math.random()*Math.PI*2;
+  const p = puntoCorazon(t);
+  const grosor = (Math.random()-0.5)*0.22;
+  const normal = Math.random()*Math.PI*2;
+  posBorde[idx]   = p.x + Math.cos(normal)*grosor;
+  posBorde[idx+1] = p.y + Math.sin(normal)*grosor;
+  posBorde[idx+2] = (Math.random()-0.5)*0.5;
+}
+const geoBorde = new THREE.BufferGeometry();
+geoBorde.setAttribute("position", new THREE.BufferAttribute(posBorde,3));
+const matBorde = new THREE.PointsMaterial({
+  color:0xffe0f0, size:0.09, map:DOT, transparent:true, opacity:0.95, depthWrite:false, blending:THREE.AdditiveBlending
+});
+const bordeCorazon = new THREE.Points(geoBorde, matBorde);
+grupoCorazon.add(bordeCorazon);
+
+const cantidadRelleno = 3000;
+const posRelleno = new Float32Array(cantidadRelleno*3);
+for(let i=0;i<cantidadRelleno;i++){
+  const idx = i*3;
+  const t = Math.random()*Math.PI*2;
+  const p = puntoCorazon(t);
+  const relleno = Math.pow(Math.random(), 0.6);
+  posRelleno[idx]   = p.x*relleno + (Math.random()-0.5)*0.07;
+  posRelleno[idx+1] = p.y*relleno + (Math.random()-0.5)*0.07;
+  posRelleno[idx+2] = (Math.random()-0.5)*0.9;
+}
+const geoRelleno = new THREE.BufferGeometry();
+geoRelleno.setAttribute("position", new THREE.BufferAttribute(posRelleno,3));
+const matRelleno = new THREE.PointsMaterial({
+  color:0xd6154f, size:0.07, map:DOT, transparent:true, opacity:0.55, depthWrite:false, blending:THREE.AdditiveBlending
+});
+const rellenoCorazon = new THREE.Points(geoRelleno, matRelleno);
+grupoCorazon.add(rellenoCorazon);
+
+const planetasOrbitando = [];
+const numeroPlanetas = 12;
+for(let i=0; i<numeroPlanetas; i++){
+  const matP = new THREE.SpriteMaterial({
+    map: (i % 2 === 0 ? DOT_GOLD : DOT),
+    transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending
+  });
+  const pMesh = new THREE.Sprite(matP);
+  const s = 0.3 + Math.random()*0.4;
+  pMesh.scale.set(s, s, 1);
+  grupoCorazon.add(pMesh);
+  planetasOrbitando.push({
+    mesh: pMesh,
+    radio: 2.8 + Math.random()*2.2,
+    angulo: Math.random()*Math.PI*2,
+    velocidad: 0.01 + Math.random()*0.02,
+    alturaY: (Math.random()-0.5)*2.0
+  });
+}
+
+/* ---------- Campo de Tulipanes ---------- */
+const ok=[];let pool=[],built=false;
+C.FIELD.forEach(f=>{const im=new Image();im.referrerPolicy='no-referrer';im.onload=()=>{ok.push({u:f.u,h:f.h,ar:im.naturalWidth/im.naturalHeight});if(!built&&phase>=1)build()};im.src=f.u});
+
+function build(){
+  if(built||!ok.length)return;
+  built=true;heads.visible=stems.visible=false;
+  const L=ok.slice().sort(()=>R()-.5);
+  for(let i=0;i<900;i++){
+    const f=L[i%L.length],e=document.createElement('img');
+    e.src=f.u; e.referrerPolicy='no-referrer'; e.className='f';
+    document.body.appendChild(e);
+    const side = (i % 2 === 0 ? -1 : 1);
+    const xPos = side * (1.4 + Math.pow(R(), 1.1) * 17);
+    pool.push({e, x: xPos, z: R()*D, h: (f.h||2.0)*(.85+R()*.4), ph: R()*6.28});
+  }
+}
+
+function field(s,t,cx,cy){const W=innerWidth,H=innerHeight,F=H/2/Math.tan(35*Math.PI/180);
+ pool.forEach(p=>{const d=D-((p.z+s)%D),q=p.e.style;if(d<1.1){q.display='none';return}
+  const k=p.h*F/d/180;q.display='block';q.opacity=cl(Math.min((d-1.1)/1.8,(D-d)/20,1),0,1);q.zIndex=1+Math.round((D-d)*8);
+  q.transform='translate('+(W/2+(p.x-cx)*F/d)+'px,'+(H/2+(cy+0.1)*F/d)+'px) scale('+k+') rotate('+Math.sin(t*1.5+p.ph)*3+'deg) translate(-50%,-100%)'})}
+
+/* ---------- Interacción con Tarjetas de Texto ---------- */
+document.querySelectorAll('.texto-flotante').forEach(el => {
+  el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const id = el.getAttribute('data-id');
+    const wish = C.WISHES[id] || C.WISHES[0];
+    $('wishTitle').innerText = wish.title;
+    $('wishText').innerText = wish.text;
+    $('wishModal').style.display = 'flex';
+  });
+});
+
+$('closeWish').onclick = () => { $('wishModal').style.display = 'none'; };
+$('wishModal').onclick = (e) => {
+  if(e.target === $('wishModal')) $('wishModal').style.display = 'none';
+};
+
+/* ---------- Bucle de Animación ---------- */
+let phase=0,t=0,tA=0,tB=0,s=0,dy=0,dp=0,drag=false,lx=0,ly=0,ci=0,titled=false;
+addEventListener('pointerdown',e=>{drag=true;lx=e.clientX;ly=e.clientY});
+addEventListener('pointerup',()=>drag=false);
+addEventListener('pointermove',e=>{if(!drag)return;dy+=(e.clientX-lx)*.005;dp=cl(dp+(e.clientY-ly)*.004,-.6,.6);lx=e.clientX;ly=e.clientY});
+addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()});
+
+function say(el,txt){el.style.opacity=0;setTimeout(()=>{el.textContent=txt;el.style.opacity=1},el.id==='msg'?1200:900)}
+
+$('go').onclick=()=>{
+  $('start').style.display='none';
+  phase=1;
+  build();
+  if(music) music.play().catch(()=>{});
+};
+
+const clock=new THREE.Clock();
+
+const arrEspiral = geoEspiral.attributes.position.array;
+const arrCorriente = geoCorriente.attributes.position.array;
+
+function loop(){
+  requestAnimationFrame(loop);
+  const dt=Math.min(clock.getDelta(),.05);t+=dt;
+  
+  if(phase<2){
+    if(phase===1){
+      tA+=dt;s+=dt*(6+Math.min(tA,C.T1)*1.2);
+      if(ci<C.INTRO.length&&tA>=C.INTRO[ci][0]){say($('cap'),C.INTRO[ci][1]);ci++}
+      if(tA>C.T1){
+        phase=1.5;
+        $('cap').style.opacity=0;
+        $('flash').style.opacity=1;
+        setTimeout(()=>{
+          phase=2;
+          tB=0;
+          pool.forEach(p=>p.e.remove());
+          pool=[];
+          $('flash').style.opacity=0;
+          $('universoUI').style.display = 'block';
+          camera.position.set(0, 2.1, 9.5);
+        },950);
+      }
+    }
+    const cx=Math.sin(t*.7)*.25,cy=1.3+Math.sin(t*2.2)*.05;
+    if(heads.visible)tulips(s,t);
+    camera.position.set(cx,cy,0);
+    camera.rotation.set(0,0,0);
+    camera.lookAt(cx,cy,-20);
+    field(s,t,cx,cy);
+    renderer.render(A,camera);
+  }
+  else{
+    tB+=dt;
+
+    for(let i=0;i<cantidadEspiral;i++){
+      const idx = i*3;
+      const angulo = anguloEspiral[i] + tB*velEspiral[i];
+      const r = radioEspiral[i];
+      arrEspiral[idx]   = Math.cos(angulo)*r;
+      arrEspiral[idx+1] = Math.sin(tB*0.8 + i)*0.05;
+      arrEspiral[idx+2] = Math.sin(angulo)*r;
+    }
+    geoEspiral.attributes.position.needsUpdate = true;
+    grupoPortal.rotation.y += 0.0006;
+
+    for(let i=0;i<cantidadCorriente;i++){
+      const idx = i*3;
+      progresoCorriente[i] += velCorriente[i]*0.006;
+      if(progresoCorriente[i] > 1) progresoCorriente[i] = 0;
+      const p = progresoCorriente[i];
+      const yPos = alturaPortal + (alturaCorazon - alturaPortal)*p;
+      const radio = radioInicialCorriente[i]*(1-p*0.92);
+      const angulo = anguloCorriente[i] + tB*(0.6 - p*0.3);
+
+      arrCorriente[idx]   = Math.cos(angulo)*radio;
+      arrCorriente[idx+1] = yPos;
+      arrCorriente[idx+2] = Math.sin(angulo)*radio;
+    }
+    geoCorriente.attributes.position.needsUpdate = true;
+
+    const escalaCorazon = 1 + Math.sin(tB*2)*0.03;
+    bordeCorazon.scale.set(escalaCorazon, escalaCorazon, escalaCorazon);
+    rellenoCorazon.scale.set(escalaCorazon, escalaCorazon, escalaCorazon);
+
+    const escalaHalo = 1 + Math.sin(tB*1.5)*0.09;
+    halo.scale.set(5.6*escalaHalo, 5.6*escalaHalo, 1);
+    const escalaHaloInt = 1 + Math.sin(tB*2)*0.07;
+    haloInterior.scale.set(3.0*escalaHaloInt, 3.0*escalaHaloInt, 1);
+
+    grupoCorazon.rotation.y = Math.sin(tB*0.4)*0.1;
+
+    planetasOrbitando.forEach(p => {
+      p.angulo += p.velocidad;
+      p.mesh.position.x = Math.cos(p.angulo) * p.radio;
+      p.mesh.position.z = Math.sin(p.angulo) * p.radio;
+      p.mesh.position.y = p.alturaY + Math.sin(tB + p.angulo)*0.2;
+    });
+
+    camera.position.x = Math.sin(tB*0.07)*1.0 + dy;
+    camera.position.y = 2.1 + dp;
+    camera.lookAt(0, 1.6, 0);
+
+    if(!titled && tB > 3){
+      titled = true;
+      $('title').style.opacity = 1;
+    }
+
+    renderer.render(B,camera);
+  }
+}
+loop();
+</script></body></html>
