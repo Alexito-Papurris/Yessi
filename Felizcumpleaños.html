@@ -154,7 +154,7 @@ canvas{position:fixed;inset:0;display:block;touch-action:none}
 <!-- Pantalla de Activación Inicial (Permite audio automático al tocar la pantalla) -->
 <div id="startOverlay">
   <h2>✨ Un regalo especial te espera ✨</h2>
-  <p>Toca en cualquier parte para ingresar🎵</p>
+  <p>Toca en cualquier parte para ingresar con música 🎵</p>
 </div>
 
 <!-- Pantalla de Inicio -->
@@ -221,6 +221,9 @@ document.getElementById('startOverlay').onclick = () => {
   if(music) music.play().catch(()=>{});
 };
 
+// DETECCIÓN DE MÓVIL PARA OPTIMIZAR RENDIMIENTO
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || innerWidth < 768;
+
 // ====== CONFIGURACIÓN GENERAL ======
 const C={
   NAME:"Yessi",
@@ -250,22 +253,22 @@ const C={
 
 const $=id=>document.getElementById(id),R=Math.random,cl=(x,a,b)=>Math.min(b,Math.max(a,x));
 const ease=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
-const renderer=new THREE.WebGLRenderer({antialias:true, alpha:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const renderer=new THREE.WebGLRenderer({antialias:!isMobile, alpha:true, powerPreference:"high-performance"});
+renderer.setPixelRatio(isMobile ? 1 : Math.min(devicePixelRatio,2));
 renderer.setSize(innerWidth,innerHeight);
 document.body.appendChild(renderer.domElement);
 const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.1,400);
 
 function crearTextura(centro, medio, borde){
   const c = document.createElement("canvas");
-  c.width = 64; c.height = 64;
+  c.width = 32; c.height = 32;
   const ctx = c.getContext("2d");
-  const g = ctx.createRadialGradient(32,32,0,32,32,32);
+  const g = ctx.createRadialGradient(16,16,0,16,16,16);
   g.addColorStop(0, centro);
   g.addColorStop(0.35, medio);
   g.addColorStop(1, borde);
   ctx.fillStyle = g;
-  ctx.fillRect(0,0,64,64);
+  ctx.fillRect(0,0,32,32);
   return new THREE.CanvasTexture(c);
 }
 const DOT = crearTextura("rgba(255,255,255,1)","rgba(255,110,170,0.9)","rgba(255,0,120,0)");
@@ -286,16 +289,16 @@ A.add(ground);
 
 function createGoldPathTexture(){
     const canvas = document.createElement('canvas');
-    canvas.width = 64; canvas.height = 512;
+    canvas.width = 32; canvas.height = 256;
     const ctx = canvas.getContext('2d');
-    const grad = ctx.createLinearGradient(0, 0, 64, 0);
+    const grad = ctx.createLinearGradient(0, 0, 32, 0);
     grad.addColorStop(0, 'rgba(253, 224, 71, 0)');
     grad.addColorStop(0.3, 'rgba(253, 224, 71, 0.4)');
     grad.addColorStop(0.5, 'rgba(254, 240, 138, 0.7)');
     grad.addColorStop(0.7, 'rgba(253, 224, 71, 0.4)');
     grad.addColorStop(1, 'rgba(253, 224, 71, 0)');
     ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 64, 512);
+    ctx.fillRect(0, 0, 32, 256);
     return new THREE.CanvasTexture(canvas);
 }
 const pathGeo = new THREE.PlaneGeometry(3.6, 300);
@@ -305,7 +308,7 @@ path.rotation.x = -Math.PI / 2;
 path.position.set(0, -0.15, -120);
 A.add(path);
 
-const tunnelStarsCount = 3500;
+const tunnelStarsCount = isMobile ? 1200 : 3500;
 const tStarPositions = new Float32Array(tunnelStarsCount * 3);
 for(let i=0; i<tunnelStarsCount; i++){
     tStarPositions[i*3] = (R() - 0.5) * 320;
@@ -319,17 +322,17 @@ A.add(new THREE.Points(tStarGeo, tStarMat));
 
 function createMoonTexture(){
     const canvas = document.createElement('canvas');
-    canvas.width = 128; canvas.height = 128;
+    canvas.width = 64; canvas.height = 64;
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#fef08a';
     ctx.shadowColor = '#fde047';
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 10;
     ctx.beginPath();
-    ctx.arc(64, 64, 45, 0, Math.PI * 2);
+    ctx.arc(32, 32, 22, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
-    ctx.arc(80, 52, 40, 0, Math.PI * 2);
+    ctx.arc(40, 26, 20, 0, Math.PI * 2);
     ctx.fill();
     return new THREE.CanvasTexture(canvas);
 }
@@ -339,10 +342,10 @@ moon.scale.set(18, 18, 1);
 moon.position.set(35, 42, -180);
 A.add(moon);
 
-const N=1500,D=160,bx=[],bz=[],hh=[],sc=[],ph=[];
+const N = isMobile ? 500 : 1500, D=160,bx=[],bz=[],hh=[],sc=[],ph=[];
 const pal=[0xff4d7e,0xff85a8,0xffd23f,0xb04dff,0xffffff,0xff7a3d,0xe8123c].map(c=>new THREE.Color(c));
-const headG=new THREE.LatheGeometry([[0,0],[.12,.05],[.26,.25],[.3,.45],[.22,.65],[.08,.8],[0,.84]].map(p=>new THREE.Vector2(p[0],p[1])),12);
-const stemG=new THREE.CylinderGeometry(.02,.03,1,5);stemG.translate(0,.5,0);
+const headG=new THREE.LatheGeometry([[0,0],[.12,.05],[.26,.25],[.3,.45],[.22,.65],[.08,.8],[0,.84]].map(p=>new THREE.Vector2(p[0],p[1])),8);
+const stemG=new THREE.CylinderGeometry(.02,.03,1,4);stemG.translate(0,.5,0);
 const heads=new THREE.InstancedMesh(headG,new THREE.MeshLambertMaterial({side:THREE.DoubleSide}),N);
 const stems=new THREE.InstancedMesh(stemG,new THREE.MeshLambertMaterial({color:0x3f8f3a}),N);
 [heads,stems].forEach(m=>{m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);m.frustumCulled=false;A.add(m)});
@@ -356,7 +359,7 @@ heads.instanceMatrix.needsUpdate=stems.instanceMatrix.needsUpdate=true}
 /* ---------- ESCENA B: Universo ---------- */
 const B=new THREE.Scene();B.fog=new THREE.FogExp2(0x030008, 0.028);
 
-const cantidadEstrellas = 2200;
+const cantidadEstrellas = isMobile ? 800 : 2200;
 const posEstrellas = new Float32Array(cantidadEstrellas*3);
 for(let i=0;i<cantidadEstrellas;i++){
   const idx=i*3;
@@ -383,14 +386,14 @@ glowPortal.scale.set(16, 6, 1);
 glowPortal.rotation.x = -Math.PI/2.3;
 grupoPortal.add(glowPortal);
 
-const nucleoGeo = new THREE.CircleGeometry(0.6, 32);
+const nucleoGeo = new THREE.CircleGeometry(0.6, 16);
 const nucleoMat = new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.95 });
 const nucleo = new THREE.Mesh(nucleoGeo, nucleoMat);
 nucleo.rotation.x = -Math.PI/2;
 nucleo.position.y = 0.01;
 grupoPortal.add(nucleo);
 
-const cantidadEspiral = 3600;
+const cantidadEspiral = isMobile ? 1200 : 3600;
 const anguloEspiral   = new Float32Array(cantidadEspiral);
 const radioEspiral    = new Float32Array(cantidadEspiral);
 const velEspiral      = new Float32Array(cantidadEspiral);
@@ -413,7 +416,7 @@ const espiral = new THREE.Points(geoEspiral, matEspiral);
 grupoPortal.add(espiral);
 
 const alturaCorazon = 2.9, alturaPortal = -1.2;
-const cantidadCorriente = 1800;
+const cantidadCorriente = isMobile ? 600 : 1800;
 const anguloCorriente = new Float32Array(cantidadCorriente);
 const progresoCorriente = new Float32Array(cantidadCorriente);
 const velCorriente = new Float32Array(cantidadCorriente);
@@ -458,7 +461,7 @@ function puntoCorazon(t){
   return {x: x*0.16, y: y*0.16};
 }
 
-const cantidadBorde = 2600;
+const cantidadBorde = isMobile ? 1000 : 2600;
 const posBorde = new Float32Array(cantidadBorde*3);
 for(let i=0;i<cantidadBorde;i++){
   const idx = i*3;
@@ -478,7 +481,7 @@ const matBorde = new THREE.PointsMaterial({
 const bordeCorazon = new THREE.Points(geoBorde, matBorde);
 grupoCorazon.add(bordeCorazon);
 
-const cantidadRelleno = 3000;
+const cantidadRelleno = isMobile ? 1000 : 3000;
 const posRelleno = new Float32Array(cantidadRelleno*3);
 for(let i=0;i<cantidadRelleno;i++){
   const idx = i*3;
@@ -498,7 +501,7 @@ const rellenoCorazon = new THREE.Points(geoRelleno, matRelleno);
 grupoCorazon.add(rellenoCorazon);
 
 const planetasOrbitando = [];
-const numeroPlanetas = 12;
+const numeroPlanetas = isMobile ? 6 : 12;
 for(let i=0; i<numeroPlanetas; i++){
   const matP = new THREE.SpriteMaterial({
     map: (i % 2 === 0 ? DOT_GOLD : DOT),
@@ -525,7 +528,8 @@ function build(){
   if(built||!ok.length)return;
   built=true;heads.visible=stems.visible=false;
   const L=ok.slice().sort(()=>R()-.5);
-  for(let i=0;i<900;i++){
+  const cantidadImagenes = isMobile ? 250 : 900;
+  for(let i=0;i<cantidadImagenes;i++){
     const f=L[i%L.length],e=document.createElement('img');
     e.src=f.u; e.referrerPolicy='no-referrer'; e.className='f';
     document.body.appendChild(e);
